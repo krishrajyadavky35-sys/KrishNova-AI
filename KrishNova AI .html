@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>KrishNova AI</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%2310B981'/%3E%3Cstop offset='1' stop-color='%231AF7A7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='60' height='60' rx='10' fill='url(%23g1)'/%3E%3Cpath d='M20 28c2-8 12-10 18-6 6 4 6 12 0 16-6 4-16 2-20-4-2-3-2-6 2-6z' fill='%23fff' opacity='0.95'/%3E%3C/svg%3E">
+    
+    <style>
+        :root {
+            /* New color palette for Glassmorphism */
+            --accent: #10B981; /* A bright green */
+            --accent-light: #1AF7A7;
+            --bg-glass: rgba(0, 0, 0, 0.25); /* Darker glass for contrast */
+            --card-glass: rgba(255, 255, 255, 0.1); /* Lighter glass for bubbles */
+            --border-glass: rgba(255, 255, 255, 0.2);
+            --text: #ffffff;
+            --muted: #c0c0c0;
+        }
+
+        /* =========================
+        BASE & FULLSCREEN SETUP
+        =========================
+        */
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent body scroll */
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            
+            /* FIX: Background image 
+            Covers the full screen, fixed, no repeat.
+            */
+            background-image: url('https://i.ibb.co/3k81jM7/bg.png');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        }
+
+        /* =========================
+        SPLASH SCREEN (Optional)
+        =========================
+        */
+        #splashScreen {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            z-index: 10000;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+            pointer-events: none; /* Allows clicks to pass through when faded */
+        }
+
+        /* =========================
+        APP LAYOUT & GLASS EFFECT
+        =========================
+        */
+        .app {
+            width: 100vw;
+            height: 100dvh; /* Dynamic viewport height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .shell {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+
+            /* FIX: Glass effect */
+            background: rgba(20, 20, 20, 0.4); /* Darker base for glass */
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            
+            /* FIX: Removed media query, this is now 100% on all devices */
+            border-radius: 0;
+        }
+        
+        /* This container holds the different views */
+        .main-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Base styles for a view */
+        .view {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            inset: 0;
+        }
+        
+        /* Home view (scrolling info sections) */
+        #homeView {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        
+        /* Chat view (flex column) */
+        #chatView {
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        /* =========================
+        HEADER
+        =========================
+        */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2); /* Transparent header */
+            border-bottom: 1px solid var(--border-glass);
+            flex-shrink: 0;
+            flex-wrap: wrap; /* Allow buttons to wrap on small screens */
+            gap: 8px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logoBox {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* FIX: Added animation for the embedded SVG logo */
+        .logoBox svg .pulse-path {
+            animation: pulse-logo 2.5s infinite ease-in-out;
+            transform-origin: center; /* Ensure scaling is from the center */
+        }
+        
+        @keyframes pulse-logo {
+            0%, 100% {
+                opacity: 0.95;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(0.9);
+            }
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 1.15rem; /* 18px */
+            color: var(--text);
+        }
+        
+        .small {
+            font-size: 0.8rem; /* 13px */
+            color: var(--muted);
+        }
+
+        .headerRight {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap; /* Allow buttons to wrap */
+            justify-content: flex-end;
+        }
+        
+        .headerBtn {
+            background: var(--card-glass);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap; /* Prevent button text from wrapping */
+        }
+        .headerBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--border-glass);
+        }
+        
+        /* =========================
+        MAIN SCROLLING AREA (Chat + Info)
+        =========================
+        */
+        .main-content-area {
+            flex: 1; /* Takes all available space */
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+
+        /* =========================
+        CHAT AREA
+        =========================
+        */
+        .chatArea {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+            color: var(--text);
+        }
+
+        .avatar.user {
+            background: linear-gradient(135deg, #007BFF, #00BFFF);
+        }
+
+        .avatar.bot {
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: #000;
+        }
+
+        .bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.4;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+        }
+
+        .bubble.user {
+            background: #007BFF; /* A distinct user color */
+            color: var(--text);
+            margin-left: auto;
+            border-bottom-right-radius: 6px;
+            order: 2;
+        }
+        
+        .bubble.ai {
+            background: var(--bg-glass);
+            color: var(--text);
+            margin-right: auto;
+            border-bottom-left-radius: 6px;
+        }
+        
+        .row.user {
+            justify-content: flex-end;
+        }
+
+        .ts {
+            font-size: 0.75rem; /* 12px */
+            color: var(--muted);
+            margin-top: -4px;
+            margin-bottom: 8px;
+            padding: 0 48px; /* Align with bubbles */
+        }
+        .ts.user {
+            text-align: right;
+        }
+        .ts.ai {
+            text-align: left;
+        }
+
+        /* Typing animation */
+        .bubble.typing {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 14px 16px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--muted);
+            animation: typing-bounce 1.2s infinite ease-in-out;
+        }
+        .dot:nth-child(2) { animation-delay: -0.2s; }
+        .dot:nth-child(3) { animation-delay: -0.4s; }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* =========================
+        NEW INFO SECTIONS
+        =========================
+        */
+        .infoSections {
+            padding: 24px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid var(--border-glass);
+            color: var(--text);
+        }
+        
+        .infoSections section {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--card-glass);
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .infoSections h2 {
+            margin-top: 0;
+            color: var(--accent-light);
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 8px;
+        }
+        
+        .infoSections p {
+            line-height: 1.6;
+            color: var(--muted);
+            margin-bottom: 0;
+        }
+        .infoSections p a {
+            color: var(--accent-light);
+            text-decoration: none;
+        }
+        .infoSections p a:hover {
+            text-decoration: underline;
+        }
+
+        /* =========================
+        INPUT BAR
+        =========================
+        */
+        .inputBar {
+            display: flex;
+            gap: 10px;
+            padding: 12px;
+            border-top: 1px solid var(--border-glass);
+            background: rgba(0, 0, 0, 0.3); /* Slightly darker */
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 999px; /* Pill shape */
+            border: 1px solid var(--border-glass);
+            font-size: 15px;
+            background: var(--card-glass);
+            color: var(--text);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .input::placeholder {
+            color: var(--muted);
+        }
+        .input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+        }
+
+        .sendBtn {
+            background: var(--accent);
+            color: #000;
+            padding: 10px 16px;
+            border-radius: 999px; /* Pill shape */
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+        .sendBtn:hover {
+            background: var(--accent-light);
+            box-shadow: 0 6px 20px rgba(26, 247, 167, 0.3);
+        }
+        .sendBtn:disabled {
+            background: #555;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* =========================
+        MODALS (Login & Settings)
+        =========================
+        */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            /* Darker, stronger blur for modals */
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            transition: opacity 0.3s ease;
+        }
+        .overlay[aria-hidden="true"] {
+            display: none;
+        }
+
+        .modal {
+            width: 92%;
+            max-width: 500px;
+            /* Modal glass is lighter than overlay */
+            background: rgba(40, 40, 40, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 22px 48px rgba(0, 0, 0, 0.4);
+            color: var(--text);
+        }
+        
+        .modal h3 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: var(--text);
+        }
+        
+        /* Full-width input for modals */
+        .input.full {
+            width: 100%;
+            border-radius: 8px; /* Not pill in modals */
+            margin-top: 16px;
+        }
+
+        /* Modal buttons */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        
+        .btn-primary {
+            flex: 1;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            background: var(--accent-light);
+        }
+        
+        .btn-ghost {
+            flex: 1;
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border-glass);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        .btn-ghost:hover {
+            background: var(--card-glass);
+            border-color: #fff;
+        }
+        
+        /* Button group with vertical layout */
+        .btn-group-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splashScreen">🌌 KrishNova AI — Created by Krishraj Yadav</div>
+
+    <div class="app" id="app">
+        <div class="shell" role="application" aria-label="KrishNova AI Chat">
+            
+            <div class="header">
+                <div class="brand">
+                    <div class="logoBox" aria-hidden="true">
+                        <svg width="40" height="40" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                          <defs>
+                            <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+                              <stop offset="0" stop-color="var(--accent)"/>
+                              <stop offset="1" stop-color="var(--accent-light)"/>
+                            </linearGradient>
+                          </defs>
+                          <rect x="2" y="2" width="60" height="60" rx="10" fill="url(#g1)"/>
+                          <path class="pulse-path" d="M20 28c2-8 12-10 18-6 6 4 6 12 0 16-6 4-16 2-20-4-2-3-2-6 2-6z" fill="#fff" opacity="0.95"/>
+                          <circle cx="44" cy="20" r="2" fill="#fff" opacity="0.8"/>
+                          <circle cx="24" cy="20" r="2" fill="#fff" opacity="0.8"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1>KrishNova AI</h1>
+                        <div class="small" id="userLabel">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="headerRight">
+                    <button class="headerBtn" id="btnNavHome">Home</button>
+                    <button class="headerBtn" id="btnNavChat">Chat with KrishNova AI</button>
+                    <button class="headerBtn" id="btnLoginEmailHeader">Log in with Email ID</button>
+                    <button class="headerBtn" id="btnNavAbout">About Us</button>
+                    <button class="headerBtn" id="btnNavWhy">Why KrishNova AI</button>
+                    <button class="headerBtn" id="btnNavContact">Contact Us</button>
+                    <button class="headerBtn" id="btnFeedback">Feedback</button>
+                    <button class="headerBtn" id="btnInstall" style="display:none">Install</button>
+                    <button class="headerBtn" id="btnLogout">Logout</button>
+                </div>
+
+            </div>
+
+            <div class="main-container">
+
+                <div id="homeView" class="view">
+                    <div id="infoSections" class="infoSections">
+                        <section>
+                            <h2>About Us</h2>
+                            <p>This AI helps users just like Gemini but however it can't generate images. We will include image generation in its premium plan.</p>
+                        </section>
+                        
+                        <section>
+                            <h2>Why KrishNova AI</h2>
+                            <p>KrishNova is designed to answer any question, explain any concept like a teacher, talk like a friend, provide code for coding, and give you a premium look in its free plan.</p>
+                        </section>
+                        
+                        <section>
+                            <h2>Contact Us</h2>
+                            <p>Contact us at: <a href="mailto:krishrajyadav.ky35@gmail.com">krishrajyadav.ky35@gmail.com</a></p>
+                        </section>
+                    </div>
+                </div>
+
+                <div id="chatView" class="view" style="display: none;">
+                    <div class="main-content-area" id="mainChatArea">
+                        <main id="chatArea" class="chatArea" role="log" aria-live="polite"></main>
+                    </div>
+                    
+                    <div class="inputBar" role="form">
+                        <input id="userInput" class="input" placeholder="Ask me anything..." aria-label="Message input" />
+                        <button id="sendBtn" class="sendBtn" aria-label="Send Message">Send</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div id="loginModal" class="overlay" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+            <h3 id="loginTitle">Welcome to KrishNova AI</h3>
+            <div class="small" style="color:var(--muted); margin-top: 4px;">Enter your name to chat, or log in with your email.</div>
+            
+            <div class="btn-group" style="margin-top: 20px;">
+                <input id="usernameInput" class="input" placeholder="Enter your name..." style="flex: 2; border-radius: 8px;"/>
+                <button id="btnStartChat" class="btn-primary" style="flex: 1;">Chat</button>
+            </div>
+            
+            <div style="text-align: center; color: var(--muted); margin: 16px 0; font-size: 0.8rem;">OR</div>
+
+            <div class="btn-group-vertical" style="margin-top: 0;">
+                <button id="btnLoginWithEmail" class="btn-ghost">Login with Email ID (opens new tab)</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    /* ===================================================
+      API KEY
+      =================================================== */
+    // 
+    // !! IMPORTANT !! 
+    // Replace this with your actual OpenRouter API Key
+    //
+    const OPENROUTER_API_KEY = "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";
+    //
+    // =================== END OF CHANGES ===================
+
+
+    /* =========================
+      APP STATE
+      ========================= */
+    let state = {
+        user: null, // Will be { name: 'Username' }
+        conversation: [],
+    };
+    let isCalling = false;
+    let typingBubble = null; // Store ref to the typing bubble
+
+    /* =========================
+      DOM REFS
+      ========================= */
+    // Modals
+    const loginModal = document.getElementById('loginModal');
+    
+    // Main UI
+    // Views
+    const homeView = document.getElementById('homeView');
+    const chatView = document.getElementById('chatView');
+
+    // Updated mainContentArea to point to the one inside chatView
+    const mainContentArea = document.getElementById('mainChatArea'); 
+
+    const chatArea = document.getElementById('chatArea');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const userLabel = document.getElementById('userLabel');
+    const infoSections = document.getElementById('infoSections');
+
+    // Header Buttons
+    const btnNavHome = document.getElementById('btnNavHome');
+    const btnNavChat = document.getElementById('btnNavChat');
+    // ================== START OF CHANGES ==================
+    const btnLoginEmailHeader = document.getElementById('btnLoginEmailHeader'); // Added back
+    // =================== END OF CHANGES ===================
+    const btnNavAbout = document.getElementById('btnNavAbout');
+    const btnNavWhy = document.getElementById('btnNavWhy');
+    const btnNavContact = document.getElementById('btnNavContact');
+    const btnFeedback = document.getElementById('btnFeedback');
+    const btnInstall = document.getElementById('btnInstall');
+    const btnLogout = document.getElementById('btnLogout');
+
+    // Modal Buttons
+    const btnStartChat = document.getElementById('btnStartChat');
+    const usernameInput = document.getElementById('usernameInput');
+    // ================== START OF CHANGES ==================
+    const btnLoginWithEmail = document.getElementById('btnLoginWithEmail'); // Added back
+    // =================== END OF CHANGES ===================
+    
+    // Splash Screen
+    const splashScreen = document.getElementById('splashScreen');
+
+
+    /* =========================
+      SPLASH SCREEN LOGIC
+      ========================= */
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            if (splashScreen) {
+                splashScreen.style.opacity = '0';
+                splashScreen.addEventListener('transitionend', () => {
+                    splashScreen.style.display = 'none';
+                });
+            }
+        }, 1500); // Show for 1.5 seconds
+    });
+
+
+    /* =========================
+      PWA INSTALL PROMPT
+      ========================= */
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (btnInstall) btnInstall.style.display = 'inline-block';
+    });
+    
+    if (btnInstall) btnInstall.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        btnInstall.style.display = 'none';
+    });
+
+
+    /* =========================
+      STORAGE HELPERS
+      ========================= */
+    function convKey(name) { 
+        return 'kr_conv_v2_' + name;
+    }
+
+    function saveConv() {
+        if (!state.user) return;
+        localStorage.setItem(convKey(state.user.name), JSON.stringify(state.conversation));
+    }
+
+    function loadConvFor(name) {
+        const raw = localStorage.getItem(convKey(name));
+        if (!raw) return [];
+        try { 
+            return JSON.parse(raw); 
+        } catch (e) { 
+            console.error("Failed to parse conversation:", e);
+            return []; 
+        }
+    }
+
+    /* =========================
+      UI HELPERS
+      ========================= */
+    // View switching logic
+    function showView(viewId) {
+        if (viewId === 'chat') {
+            homeView.style.display = 'none';
+            chatView.style.display = 'flex'; // It's a flex column
+            if (state.conversation.length > 1) { // Only scroll if not empty
+                scrollToBottom(); // Scroll chat to bottom
+            }
+        } else {
+            // 'home'
+            homeView.style.display = 'block';
+            chatView.style.display = 'none';
+        }
+    }
+
+
+    function setUserLabel() {
+        userLabel.textContent = state.user ? `Logged in as ${state.user.name}` : 'Not logged in';
+    }
+
+    function nowTs() { 
+        return Date.now(); 
+    }
+    
+    function fmtTime(ts) { 
+        const d = new Date(ts); 
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); 
+    }
+    
+    function scrollToBottom() {
+        mainContentArea.scrollTo({ // This now correctly points to mainChatArea
+            top: mainContentArea.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+
+    function appendMessage(sender, text, ts = Date.now(), skipSave = false) {
+        const isUser = sender === 'user';
+        const row = document.createElement('div');
+        row.className = `row ${isUser ? 'user' : 'ai'}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = `avatar ${isUser ? 'user' : 'bot'}`;
+        avatar.textContent = isUser 
+            ? (state.user?.name ? state.user.name[0].toUpperCase() : 'U') 
+            : 'K';
+        
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${isUser ? 'user' : 'ai'}`;
+        bubble.innerHTML = text; 
+
+        const time = document.createElement('div');
+        time.className = `ts ${isUser ? 'user' : 'ai'}`;
+        time.textContent = fmtTime(ts);
+
+        if (isUser) {
+            row.appendChild(bubble);
+            row.appendChild(avatar);
+        } else {
+            row.appendChild(avatar);
+            row.appendChild(bubble);
+        }
+        
+        chatArea.appendChild(row);
+        chatArea.appendChild(time);
+        scrollToBottom();
+
+        if (!skipSave && text) {
+            state.conversation.push({ role: isUser ? 'user' : 'assistant', content: text, ts });
+            saveConv();
+        }
+
+        if (sender === 'ai' && text && !bubble.classList.contains('typing')) {
+            try {
+                speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.rate = 1; u.pitch = 1;
+                speechSynthesis.speak(u);
+            } catch (e) {
+                console.warn("Speech synthesis failed", e);
+            }
+        }
+        return bubble;
+    }
+
+    function showTypingIndicator() {
+        if (typingBubble) return;
+        const bubble = appendMessage('ai', '', nowTs(), true);
+        bubble.classList.add('typing');
+        bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+        typingBubble = bubble;
+        scrollToBottom();
+    }
+
+    function removeTypingIndicator() {
+        if (!typingBubble) return;
+        const row = typingBubble.parentElement;
+        if (row) {
+            const time = row.nextSibling;
+            if (time && time.classList.contains('ts')) {
+                time.remove();
+            }
+            row.remove();
+        }
+        typingBubble = null;
+    }
+
+
+    /* =========================
+      LOGIN / LOGOUT FLOW
+      ========================= */
+    
+    // This function now takes the username
+    function proceedToChat(username) {
+        loginModal.setAttribute('aria-hidden', 'true');
+        startSession(username);
+        showView('chat'); // Switch to the chat view
+    }
+
+    // ================== START OF CHANGES ==================
+    // 1. Listen for "Start Chatting" button (from name input)
+    btnStartChat.addEventListener('click', () => {
+        const name = usernameInput.value.trim();
+        if (!name) {
+            alert('Please enter your name.');
+            return;
+        }
+        localStorage.setItem('kr_username', name); // Save the name
+        proceedToChat(name);
+    });
+
+    // 2. Listen for "Login with Email ID" from initial modal
+    btnLoginWithEmail.addEventListener('click', () => {
+        window.open('https://forms.fillout.com/t/esd9MpKpyEus', '_blank');
+        // Start a guest session so the user can use the app
+        // We use "Guest" as the name, and don't save it
+        proceedToChat('Guest'); 
+    });
+    // =================== END OF CHANGES ===================
+
+
+    // This function now just starts the session logic
+    function startSession(username) {
+        state.user = { name: username }; // This is the critical line
+        state.conversation = loadConvFor(username);
+        
+        // Hard-coded creator prompt
+        const sysText = `You are KrishNova AI. When asked who created you, you MUST reply with the exact phrase: "I was created by Krishraj Yadav at the age of 12 years old." You are talking to a user named ${username}. Be friendly and helpful.`;
+        
+        if (!state.conversation.length || state.conversation[0].role !== 'system') {
+            state.conversation.unshift({ role: 'system', content: sysText, ts: nowTs() });
+        } else {
+            state.conversation[0].content = sysText; // Update prompt with new name
+        }
+        
+        setUserLabel();
+        renderConversation();
+    }
+    
+    // Logout button listener
+    btnLogout.addEventListener('click', () => {
+        if (!state.user) return;
+        if (!confirm('Logout? This will clear your current session.')) return;
+        
+        state.user = null; // Set user to null
+        state.conversation = [];
+        chatArea.innerHTML = '';
+        userLabel.textContent = 'Not logged in';
+        localStorage.removeItem('kr_username'); // Clear saved name
+        loginModal.setAttribute('aria-hidden', 'false'); // Show login modal
+        showView('home'); // Switch to home view
+    });
+
+    /* =========================
+      HEADER BUTTONS
+      ========================= */
+    
+    // Home button
+    if (btnNavHome) btnNavHome.addEventListener('click', () => {
+        showView('home');
+    });
+
+    // Chat button
+    if (btnNavChat) btnNavChat.addEventListener('click', () => {
+        if (!state.user) {
+            // If not logged in, show login modal
+            loginModal.setAttribute('aria-hidden', 'false');
+        } else {
+            // If logged in, just show chat
+            showView('chat');
+        }
+    });
+
+    // ================== START OF CHANGES ==================
+    // Header "Log in with Email ID" button
+    if (btnLoginEmailHeader) btnLoginEmailHeader.addEventListener('click', () => {
+        // User is already in the app, just open the form
+        window.open('https://forms.fillout.com/t/esd9MpKpyEus', '_blank');
+    });
+    // =================== END OF CHANGES ===================
+    
+    // Info section buttons (scroll on home view)
+    if (btnNavAbout) btnNavAbout.addEventListener('click', () => {
+        showView('home');
+        setTimeout(() => { // Timeout to allow view to render
+            const aboutSection = infoSections.querySelector('section:nth-of-type(1)');
+            if (aboutSection) {
+                 homeView.scrollTo({ // Scroll the homeView
+                    top: aboutSection.offsetTop - 20,
+                    behavior: 'smooth'
+                });
+            }
+        }, 50);
+    });
+    
+    if (btnNavWhy) btnNavWhy.addEventListener('click', () => {
+        showView('home');
+         setTimeout(() => {
+            const whySection = infoSections.querySelector('section:nth-of-type(2)');
+            if (whySection) {
+                 homeView.scrollTo({ // Scroll the homeView
+                    top: whySection.offsetTop - 20, 
+                    behavior: 'smooth'
+                });
+            }
+        }, 50);
+    });
+
+    if (btnNavContact) btnNavContact.addEventListener('click', () => {
+        showView('home');
+         setTimeout(() => {
+            const contactSection = infoSections.querySelector('section:nth-of-type(3)');
+            if (contactSection) {
+                 homeView.scrollTo({ // Scroll the homeView
+                    top: contactSection.offsetTop - 20, 
+                    behavior: 'smooth'
+                });
+            }
+        }, 50);
+    });
+
+    // Feedback button listener
+    if (btnFeedback) btnFeedback.addEventListener('click', () => {
+        window.open('https://docs.google.com/forms/d/e/1FAIpQLSe0CAxW9o2dhuaWVmdVJjIMYNt-iuMt8HbdQqb83UsGkZUHXQ/viewform?usp=header', '_blank');
+    });
+
+    /* =========================
+      CHAT LOGIC
+      ========================= */
+      
+    // Render conversation history
+    function renderConversation() {
+        chatArea.innerHTML = ''; // Clear existing chat
+        state.conversation.forEach(msg => {
+            if (msg.role !== 'system') { // Don't render system prompt
+                appendMessage(msg.role === 'user' ? 'user' : 'ai', msg.content, msg.ts, true); // skipSave = true
+            }
+        });
+        // Add a welcome message if chat is empty
+        if (state.conversation.length <= 1) { // Only system prompt
+             appendMessage('ai', `Welcome, ${state.user.name}! How can I help you today?`, nowTs());
+        }
+        scrollToBottom();
+    }
+
+    // Handle user sending a message
+    async function handleSend() {
+        const text = userInput.value.trim();
+        if (!text || isCalling || !state.user) return;
+
+        isCalling = true;
+        sendBtn.disabled = true;
+        userInput.value = '';
+
+        // 1. Add user message
+        appendMessage('user', text, nowTs());
+
+        // 2. Show typing indicator
+        showTypingIndicator();
+
+        // 3. Prepare messages for API (last 10 messages + system)
+        const apiMessages = [state.conversation[0]]; // System prompt
+        const history = state.conversation.slice(-10); // Last 10
+        history.forEach(msg => {
+            if (msg.role !== 'system') {
+                apiMessages.push({ role: msg.role, content: msg.content });
+            }
+        });
+
+        // 4. Call OpenRouter API
+        try {
+            const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                    'HTTP-Referer': 'http://localhost', // Replace with your site URL
+                    'X-Title': 'KrishNova AI' // Replace with your app name
+                },
+                body: JSON.stringify({
+                    model: 'openai/gpt-4o', // Or any other model
+                    messages: apiMessages
+                })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                console.error("API Error:", err);
+                throw new Error(err.error?.message || 'Failed to get response from AI.');
+            }
+
+            const data = await res.json();
+            const aiText = data.choices[0].message.content;
+
+            // 5. Remove typing and add AI response
+            removeTypingIndicator();
+            appendMessage('ai', aiText, nowTs());
+
+        } catch (e) {
+            console.error(e);
+            removeTypingIndicator();
+            appendMessage('ai', `Sorry, I'm having trouble connecting. Error: ${e.message}`, nowTs());
+        }
+
+        isCalling = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+    }
+
+    sendBtn.addEventListener('click', handleSend);
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    });
+    
+    /* =========================
+      APP INITIALIZATION
+      ========================= */
+      
+    // On-load, check for saved name or show login modal
+    setTimeout(() => {
+        const savedName = localStorage.getItem('kr_username');
+        if (savedName) {
+            // If user reloads and is already "logged in"
+            proceedToChat(savedName);
+        } else {
+            // Show the login modal
+            loginModal.setAttribute('aria-hidden', 'false');
+            showView('home'); // Show home view behind modal
+        }
+    }, 2000); // After splash screen
+
+</script>
+</body>
+</html>
